@@ -1,9 +1,36 @@
 # rushi-time-inject
 
-Time-awareness hook for the `rushi` kernel: a `model.before` hook that
-upserts a small `"time"` prompt fragment into every model request, telling
-the model **when the user's last message was sent** and **how long the
-idle gap was since the previous exchange**.
+Time-awareness for the `rushi` kernel **and** its WebUI: a `model.before`
+hook that upserts a small `"time"` prompt fragment into every model request —
+telling the model **when the user's last message was sent** and **how long
+the idle gap was since the previous exchange** — plus the per-session switch
+for it in the sidebar.
+
+## What's in this repository
+
+Both halves of one plugin, packaged the way `rushi-rewind` is: the files that
+drop into a `rushi-webui` checkout, the install map, and the browser probe
+(`rushi-webui/e2e/` is gitignored upstream, so the probe only survives here).
+
+| Path | Role | Where it goes |
+|---|---|---|
+| `hook-time-inject/` | the hook crate (`harness-hook-time-inject`) | built here, resolved on the kernel's PATH |
+| `server/time_inject.rs` | the marker **contract**: off values, default-on, pure + tested | `<webui>/bin/rushi-web/src/` |
+| `client/time.rs` | the sidebar `time` panel (`time_plugin_view`) | `<webui>/web-leptos/src/` |
+| `client/time.css` | the panel's stylesheet section (generated from upstream) | appended to `<webui>/web-leptos/style.css` |
+| `install/TOUCHPOINTS.md` | **the install map**: every wiring edit, with the exact snippets | a human (or the sync script) |
+| `e2e/time_inject_probe.py` | CDP probe: switch → marker → hook, 37 checks | runs from here or from `rushi-webui` |
+| `e2e/model_panel_probe.py` | the CDP harness the probe imports | beside the probe |
+| `scripts/time-inject-e2e.sh` | the hook's own e2e (9 cases / 20 assertions) | built and run here |
+| `scripts/sync-from-webui.sh` | re-extracts the WebUI half + verifies every anchor | maintainer |
+| `UPSTREAM` | the `rushi-webui` revision the mirrors came from | generated |
+
+The two halves share exactly one thing — the `.time_inject` marker — and both
+sides test the same value list (see TOUCHPOINTS.md §6). Nothing else about the
+plugin is spread across repositories.
+
+The rest of this file documents the hook itself (problem, design, the marker
+format, the kernel wiring).
 
 ## Problem
 
@@ -72,8 +99,9 @@ session-scoped).
 
 The webui's left-sidebar plugin module (`rushi-webui`) exposes the
 toggle: a `time` entry in the plugin switch bar renders a switch
-(`ui.rs::time_plugin_view`), backed by
-`GET/POST /api/sessions/{id}/time-inject`. The POST writes or removes
+(`time.rs::time_plugin_view`), backed by
+`GET/POST /api/sessions/{id}/time-inject` (`main.rs`, with the decision in
+`time_inject.rs`). The POST writes or removes
 the marker (off → `"off"`; on → marker removed, back to default-on);
 the GET reports the effective state. The WASM bundle is compiled into
 the `rushi-web` binary (rust-embed), so after editing the frontend
@@ -93,15 +121,34 @@ model calls) the fragment is byte-identical, so nothing churns.
 |---|---|
 | `hook-time-inject/` | The `model.before` hook crate (binary `harness-hook-time-inject`) |
 | `scripts/time-inject-e2e.sh` | E2E: drives the real binary against synthetic logs + env, no kernel/model needed |
-| `rushi-webui/bin/rushi-web/src/sessions.rs` | Server-side marker read/write (`time_inject_enabled`, `set_time_inject`) |
-| `rushi-webui/bin/rushi-web/src/main.rs` | `GET/POST /api/sessions/{id}/time-inject` endpoints |
-| `rushi-webui/web-leptos/src/{plugins,model,api,ui}.rs` + `style.css` | Sidebar `time` plugin: registry entry, toggle switch, styles |
+| `server/time_inject.rs` | Drop-in: the marker contract (`MARKER`, `enabled_from_marker`, `marker_for`, tests) |
+| `client/time.rs` | Drop-in: the sidebar panel (`time_plugin_view`) |
+| `client/time.css` | Generated: the upstream stylesheet section + `client/time-additive.css` |
+| `install/TOUCHPOINTS.md` | Every wiring edit the drop-in files need, with the exact snippets |
+| `e2e/time_inject_probe.py` | CDP: the switch → marker → hook loop (37 checks) |
+| `scripts/sync-from-webui.sh` | Re-extracts the WebUI half and verifies all 15 anchors |
+
+Upstream, those files live at `bin/rushi-web/src/time_inject.rs`,
+`web-leptos/src/time.rs`, the `time` entry in `plugins.rs`, the handler +
+route in `main.rs`, the two `SessionManager` methods in `sessions.rs`, the
+API calls in `api.rs`, the `TimeInjectView` type in `model.rs`, and the
+appended `style.css` section.
 
 ## Build & test
 
 ```sh
-cd hook-time-inject && cargo test      # unit tests (fragment upsert, humanize, anchor logic)
+cd hook-time-inject && cargo test       # unit tests (fragment upsert, humanize, anchor logic)
 cd .. && sh scripts/time-inject-e2e.sh  # end-to-end against the built binary
+
+# the WebUI half, from this package (it finds ../rushi-webui/target/debug/rushi-web,
+# or whatever RUSHI_WEB_BIN points at, and the hook binary itself)
+python3 e2e/time_inject_probe.py 8493   # PASS (37 checks)
+
+# ... or from the upstream development home
+cd ../rushi-webui && python3 e2e/time_inject_probe.py 8493
+
+# re-extract the mirrors from a rushi-webui checkout + verify the wiring
+scripts/sync-from-webui.sh [path-to-rushi-webui]
 ```
 
 ## Wiring into the kernel
@@ -160,3 +207,9 @@ run `nix flake lock` to pin inputs.
   the marker (off writes `"off"`, on removes it); the hook binary
   no-ops on the off marker and injects on the absent one, verified
   against a real session log.
+- `e2e/time_inject_probe.py`: 37/37 pass — a real Chromium drives the
+  switch in the sidebar panel while the probe watches the marker file,
+  the API, the event log (unchanged), a second session (untouched), a
+  page reload (the state is the server's), and then runs the **real hook
+  binary** on the same fixture: `{}` (no effect) while off, and the
+  fragment + the humanized gap + the re-verify nudge while on.

@@ -1,3 +1,9 @@
+# Build / runtime noise
 target/
 **/Cargo.lock.bak
-target/
+__pycache__/
+*.pyc
+*.log
+
+# The extracted upstream block (a build product of the sync script)
+client/.time-block.css.tmp

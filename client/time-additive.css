@@ -1,0 +1,11 @@
+/* time-inject plugin — the additive half of the stylesheet (hand-maintained).
+ *
+ * Deliberately empty: unlike the rewind plugin, this one needs no in-place
+ * edit to the upstream stylesheet. The toggle's rules are a self-contained
+ * appended section (namespaced #time-body / .time-*), the switch uses the
+ * existing relief tokens, and the plugin's slot is short enough that it does
+ * not join the capsule-scrollbar rule lists.
+ *
+ * Anything that must survive `scripts/sync-from-webui.sh` without an upstream
+ * counterpart belongs HERE, after the extracted section.
+ */

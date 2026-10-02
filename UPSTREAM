@@ -1,0 +1,9 @@
+# The rushi-webui revision these mirrors were taken from.
+# Written by scripts/sync-from-webui.sh — do not edit.
+repo     = /Users/kiwi/Desktop/deepseek_harness/rushi/rushi-webui
+rev      = b8b1d4885d28cfbfe9c27f83ac164bc7da9533fe
+subject  = v0.5.60: plan — the rewind flow view (Style B)
+source   = d203d972e40d287ed13fd0294347eee9243b7237   # last commit touching a mirrored file
+source_subject = v0.5.59: time-inject plugin (webui side) — the per-session toggle
+worktree = clean
+synced   = 2026-10-02T16:40:55Z
