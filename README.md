@@ -9,8 +9,14 @@ for it in the sidebar.
 ## What's in this repository
 
 Both halves of one plugin, packaged the way `rushi-rewind` is: the files that
-drop into a `rushi-webui` checkout, the install map, and the browser probe
-(`rushi-webui/e2e/` is gitignored upstream, so the probe only survives here).
+drop into a `rushi-webui` checkout, the install map, and — for local
+verification — the browser probe.
+
+The `e2e/` python probes are **not uploaded**: they are local tools, ignored
+by git (a rule for the whole account), and this working tree gets them from
+`rushi-webui/e2e/` (also gitignored there) via `scripts/sync-from-webui.sh`.
+A fresh clone therefore contains no probes; run them from a checkout that
+has them.
 
 | Path | Role | Where it goes |
 |---|---|---|
@@ -19,8 +25,8 @@ drop into a `rushi-webui` checkout, the install map, and the browser probe
 | `client/time.rs` | the sidebar `time` panel (`time_plugin_view`) | `<webui>/web-leptos/src/` |
 | `client/time.css` | the panel's stylesheet section (generated from upstream) | appended to `<webui>/web-leptos/style.css` |
 | `install/TOUCHPOINTS.md` | **the install map**: every wiring edit, with the exact snippets | a human (or the sync script) |
-| `e2e/time_inject_probe.py` | CDP probe: switch → marker → hook, 37 checks | runs from here or from `rushi-webui` |
-| `e2e/model_panel_probe.py` | the CDP harness the probe imports | beside the probe |
+| `e2e/time_inject_probe.py` | CDP probe: switch → marker → hook, 37 checks | **local only** — not tracked, not uploaded |
+| `e2e/model_panel_probe.py` | the CDP harness the probe imports | **local only** — not tracked, not uploaded |
 | `scripts/time-inject-e2e.sh` | the hook's own e2e (9 cases / 20 assertions) | built and run here |
 | `scripts/sync-from-webui.sh` | re-extracts the WebUI half + verifies every anchor | maintainer |
 | `UPSTREAM` | the `rushi-webui` revision the mirrors came from | generated |
@@ -125,7 +131,7 @@ model calls) the fragment is byte-identical, so nothing churns.
 | `client/time.rs` | Drop-in: the sidebar panel (`time_plugin_view`) |
 | `client/time.css` | Generated: the upstream stylesheet section + `client/time-additive.css` |
 | `install/TOUCHPOINTS.md` | Every wiring edit the drop-in files need, with the exact snippets |
-| `e2e/time_inject_probe.py` | CDP: the switch → marker → hook loop (37 checks) |
+| `e2e/time_inject_probe.py` | CDP: the switch → marker → hook loop (37 checks) — local, untracked |
 | `scripts/sync-from-webui.sh` | Re-extracts the WebUI half and verifies all 15 anchors |
 
 Upstream, those files live at `bin/rushi-web/src/time_inject.rs`,
@@ -141,7 +147,9 @@ cd hook-time-inject && cargo test       # unit tests (fragment upsert, humanize,
 cd .. && sh scripts/time-inject-e2e.sh  # end-to-end against the built binary
 
 # the WebUI half, from this package (it finds ../rushi-webui/target/debug/rushi-web,
-# or whatever RUSHI_WEB_BIN points at, and the hook binary itself)
+# or whatever RUSHI_WEB_BIN points at, and the hook binary itself).
+# The probe is untracked: it is in the working tree here (the sync script puts
+# it there) and in <webui>/e2e/, nowhere else.
 python3 e2e/time_inject_probe.py 8493   # PASS (37 checks)
 
 # ... or from the upstream development home

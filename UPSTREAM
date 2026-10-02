@@ -6,4 +6,4 @@ subject  = v0.5.60: plan — the rewind flow view (Style B)
 source   = d203d972e40d287ed13fd0294347eee9243b7237   # last commit touching a mirrored file
 source_subject = v0.5.59: time-inject plugin (webui side) — the per-session toggle
 worktree = clean
-synced   = 2026-10-02T16:46:01Z
+synced   = 2026-10-02T16:49:53Z

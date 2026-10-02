@@ -305,6 +305,11 @@ sh scripts/time-inject-e2e.sh               # the hook's own 9 cases / 20 assert
 python3 e2e/time_inject_probe.py [port]     # the same CDP probe, run from here
 ```
 
-The probe resolves the server binary and the hook binary itself
-(`RUSHI_WEB_BIN`, `RUSHI_TIME_INJECT_HOOK` override), so it runs from either
-home.
+The probe resolves the server binary, the kernel config and the hook binary
+itself (`RUSHI_WEB_BIN`, `RUSHI_WEB_CONFIG`, `RUSHI_TIME_INJECT_HOOK`
+override), so it runs from either home.
+
+`e2e/` is not uploaded — the probes are local verification tools, ignored by
+git (account rule) and present only in a working tree that obtained them
+(from `rushi-webui/e2e/`, via `scripts/sync-from-webui.sh`). Everything else
+in this list runs from a fresh clone.

@@ -46,6 +46,9 @@ cp "$WEBUI/$CLIENT" "$HERE/client/time.rs"
 cp "$WEBUI/$PROBE"  "$HERE/e2e/time_inject_probe.py"
 # The CDP harness the probe imports (`from model_panel_probe import Cdp,
 # ws_connect`) — copied so the probe runs from this repo standalone.
+# NOTE: both probe copies stay LOCAL (e2e/ is gitignored, and e2e python test
+# files are not uploaded from this account at all); they are convenience
+# copies of rushi-webui/e2e/, not part of what this repository ships.
 cp "$WEBUI/$CDP"    "$HERE/e2e/model_panel_probe.py"
 
 # ── the stylesheet: the plugin's section, taken verbatim ────────────

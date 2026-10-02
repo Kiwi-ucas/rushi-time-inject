@@ -7,3 +7,9 @@ __pycache__/
 
 # The extracted upstream block (a build product of the sync script)
 client/.time-block.css.tmp
+
+# The e2e python probes are LOCAL verification tools — never uploaded
+# (account rule: no e2e python test files in the rushi repositories).
+# They live in the working tree only; `scripts/sync-from-webui.sh` copies
+# them here from rushi-webui for convenience.
+e2e/
