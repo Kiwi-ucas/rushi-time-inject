@@ -68,7 +68,13 @@ _CANDIDATES = [os.environ.get("RUSHI_WEB_BIN"),
                os.path.join(HERE, "target", "debug", "rushi-web"),
                os.path.join(_ROOT, "rushi-webui", "target", "debug", "rushi-web")]
 WEB_BIN = next((c for c in _CANDIDATES if c and os.path.exists(c)), _CANDIDATES[1])
-CONFIG = os.path.join(_ROOT, "rushi", "config.toml")
+# The kernel config the probe server is launched with (RUSHI_WEB_CONFIG
+# overrides — a clone of the package has no sibling `rushi/` checkout).
+_CONFIG_CANDIDATES = [os.environ.get("RUSHI_WEB_CONFIG"),
+                      os.path.join(_ROOT, "rushi", "config.toml"),
+                      os.path.join(HERE, "..", "rushi", "config.toml")]
+CONFIG = next((c for c in _CONFIG_CANDIDATES if c and os.path.exists(c)),
+              _CONFIG_CANDIDATES[1])
 _HOOK_CANDIDATES = [os.environ.get("RUSHI_TIME_INJECT_HOOK"),
                     os.path.join(HERE, "hook-time-inject", "target", "debug",
                                  "harness-hook-time-inject"),
