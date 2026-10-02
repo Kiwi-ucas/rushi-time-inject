@@ -1,0 +1,24 @@
+# The `harness-hook-time-inject` model.before hook crate.
+#
+# Standalone cargo package: the empty `[workspace]` table stops cargo
+# from attaching it to an ancestor workspace (goal-hooks /
+# essence-hooks precedent).
+#
+# Build: `cargo build` in this directory. The binary lands in
+# ./target/debug/harness-hook-time-inject. The loop resolves the hook
+# binary on PATH (the `bin/` farm symlinks it in).
+
+[package]
+name = "hook-time-inject"
+version = "0.1.0"
+edition = "2021"
+
+[workspace]
+
+[[bin]]
+name = "harness-hook-time-inject"
+path = "src/main.rs"
+
+[dependencies]
+chrono = "0.4"
+serde_json = "1.0"
