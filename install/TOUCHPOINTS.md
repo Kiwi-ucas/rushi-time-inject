@@ -224,8 +224,13 @@ mod time;                                  // with the other `mod` lines (alphab
 `client/time.css` is the plugin's section, **appended** to
 `web-leptos/style.css` (never inserted): every selector is namespaced
 (`#time-body`, `.time-*`), so appending is equivalent to the upstream
-in-place layout and the extraction rule stays a plain suffix
-(`sync-from-webui.sh` takes banner → EOF).
+in-place layout. The extraction rule is therefore mechanical:
+`sync-from-webui.sh` takes this plugin's banner up to the **next** section
+banner (here the end of the file). The end is the next banner rather than
+EOF on purpose — this section sits *after* the rewind plugin's, and a
+suffix-to-EOF rule would swallow whatever a later version appends (it did:
+v0.5.59's move of this section to the end silently added 22 of its lines to
+the rewind package's mirror until both rules were tightened).
 
 No existing upstream rule needs an edit for this plugin — unlike the rewind
 plugin, whose section joins the shared `layout-full` and scrollbar rules.

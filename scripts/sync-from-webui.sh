@@ -49,15 +49,26 @@ cp "$WEBUI/$PROBE"  "$HERE/e2e/time_inject_probe.py"
 cp "$WEBUI/$CDP"    "$HERE/e2e/model_panel_probe.py"
 
 # ── the stylesheet: the plugin's section, taken verbatim ────────────
-# The section is everything from the plugin's banner to EOF: a plugin's CSS
-# is APPENDED to the upstream stylesheet, never inserted, so the extraction
-# is a plain suffix. A missing banner means the upstream layout changed.
+# The section is everything from the plugin's banner to the NEXT section
+# banner (or EOF): a plugin's CSS is APPENDED to the upstream stylesheet,
+# never inserted, so the extraction is a contiguous suffix-run. (Taking it
+# to EOF instead would silently swallow a section appended after this one —
+# which is exactly how v0.5.59's time section leaked into the rewind
+# mirror's extraction.) A missing banner means the upstream layout changed.
 # (literal match — the banner carries a box-drawing rule and an em dash,
 # which awk's -v escape processing would mangle in a regex)
 BANNER='/* ── v0.5.56 time-inject plugin'
 grep -qF "$BANNER" "$WEBUI/$STYLE" || {
   echo "sync: the time-inject section banner is gone from $STYLE" >&2; exit 1; }
-awk -v banner="$BANNER" 'index($0, banner) == 1 { on = 1 } on' "$WEBUI/$STYLE" \
+awk -v banner="$BANNER" '
+  index($0, banner) == 1 { on = 1; print; next }
+  on && /^\/\* ── / { exit }          # the banner that follows ends this one
+  # blank lines are held back: the ones inside the section are flushed by the
+  # next real line, the trailing run (the separator before the next banner, or
+  # the file end) is dropped, so the block is the section exactly
+  on && /^$/ { pend = pend "\n"; next }
+  on { if (pend != "") { printf "%s", pend; pend = "" } print }
+' "$WEBUI/$STYLE" \
   > "$HERE/client/.time-block.css.tmp"
 
 {
